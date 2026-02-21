@@ -1,0 +1,41 @@
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+
+// Import your main component
+// Rename your OpenClawAI_Final.jsx file to App.jsx, or adjust this import path
+import App from "./App.jsx";
+
+// Boot React
+const root = createRoot(document.getElementById("root"));
+root.render(
+  <StrictMode>
+    <App />
+  </StrictMode>
+);
+
+// Hide the splash screen now that React has mounted
+const splash = document.getElementById("splash");
+if (splash) {
+  splash.classList.add("fade");
+  setTimeout(() => splash.remove(), 450);
+}
+
+// Register Service Worker for PWA
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker
+      .register("/sw.js")
+      .then((reg) => {
+        console.log("[OC] SW registered:", reg.scope);
+        reg.addEventListener("updatefound", () => {
+          const nw = reg.installing;
+          nw?.addEventListener("statechange", () => {
+            if (nw.state === "installed" && navigator.serviceWorker.controller) {
+              window.dispatchEvent(new CustomEvent("sw-update"));
+            }
+          });
+        });
+      })
+      .catch((e) => console.warn("[OC] SW failed:", e));
+  });
+}
